@@ -6,7 +6,7 @@ class TransactionService extends Service {
       Header, Address,
       Transaction, Witness, TransactionOutput, TransactionInput, GasRefund,
       EvmReceipt: EVMReceipt, EvmReceiptLog: EVMReceiptLog, ContractSpend,
-      Contract, Qrc20: KLC20, Qrc721: KLC721,
+      Contract, Qrc20: KRC20, Qrc721: KRC721,
       where, col
     } = this.ctx.model
     const {in: $in} = this.app.Sequelize.Op
@@ -190,14 +190,14 @@ class TransactionService extends Service {
             attributes: ['addressString']
           },
           {
-            model: KLC20,
-            as: 'klc20',
+            model: KRC20,
+            as: 'krc20',
             required: false,
             attributes: ['name', 'symbol', 'decimals']
           },
           {
-            model: KLC721,
-            as: 'klc721',
+            model: KRC721,
+            as: 'krc721',
             required: false,
             attributes: ['name', 'symbol']
           }
@@ -369,17 +369,17 @@ class TransactionService extends Service {
             addressHex: log.address,
             topics: this.transformTopics(log),
             data: log.data,
-            ...log.klc20 ? {
-              klc20: {
-                name: log.klc20.name,
-                symbol: log.klc20.symbol,
-                decimals: log.klc20.decimals
+            ...log.krc20 ? {
+              krc20: {
+                name: log.krc20.name,
+                symbol: log.krc20.symbol,
+                decimals: log.krc20.decimals
               }
             } : {},
-            ...log.klc721 ? {
-              klc721: {
-                name: log.klc721.name,
-                symbol: log.klc721.symbol
+            ...log.krc721 ? {
+              krc721: {
+                name: log.krc721.name,
+                symbol: log.krc721.symbol
               }
             } : {}
           }))
@@ -558,10 +558,10 @@ class TransactionService extends Service {
     let inputs = transaction.inputs.map((input, index) => this.transformInput(input, index, transaction, {brief}))
     let outputs = transaction.outputs.map((output, index) => this.transformOutput(output, index, {brief}))
 
-    let [klc20TokenTransfers, klc20TokenUnconfirmedTransfers, klc721TokenTransfers] = await Promise.all([
-      this.transformKLC20Transfers(transaction.outputs),
-      confirmations === 0 ? this.transformKLC20UnconfirmedTransfers(transaction.outputs) : undefined,
-      this.transformKLC721Transfers(transaction.outputs)
+    let [krc20TokenTransfers, krc20TokenUnconfirmedTransfers, krc721TokenTransfers] = await Promise.all([
+      this.transformKRC20Transfers(transaction.outputs),
+      confirmations === 0 ? this.transformKRC20UnconfirmedTransfers(transaction.outputs) : undefined,
+      this.transformKRC721Transfers(transaction.outputs)
     ])
 
     return {
@@ -602,9 +602,9 @@ class TransactionService extends Service {
           }))
           : undefined
       },
-      klc20TokenTransfers,
-      klc20TokenUnconfirmedTransfers,
-      klc721TokenTransfers
+      krc20TokenTransfers,
+      krc20TokenUnconfirmedTransfers,
+      krc721TokenTransfers
     }
   }
 
@@ -677,20 +677,20 @@ class TransactionService extends Service {
     return result
   }
 
-  async transformKLC20Transfers(outputs) {
-    const TransferABI = this.app.kalycoininfo.lib.Solidity.klc20ABIs.find(abi => abi.name === 'Transfer')
+  async transformKRC20Transfers(outputs) {
+    const TransferABI = this.app.kalycoininfo.lib.Solidity.krc20ABIs.find(abi => abi.name === 'Transfer')
     let result = []
     for (let output of outputs) {
       if (output.evmReceipt) {
-        for (let {addressHex, topics, data, klc20} of output.evmReceipt.logs) {
-          if (klc20 && topics.length === 3 && Buffer.compare(topics[0], TransferABI.id) === 0 && data.length === 32) {
+        for (let {addressHex, topics, data, krc20} of output.evmReceipt.logs) {
+          if (krc20 && topics.length === 3 && Buffer.compare(topics[0], TransferABI.id) === 0 && data.length === 32) {
             let [from, to] = await this.ctx.service.contract.transformHexAddresses([topics[1].slice(12), topics[2].slice(12)])
             result.push({
               address: addressHex.toString('hex'),
               addressHex: addressHex.toString('hex'),
-              name: klc20.name,
-              symbol: klc20.symbol,
-              decimals: klc20.decimals,
+              name: krc20.name,
+              symbol: krc20.symbol,
+              decimals: krc20.decimals,
               ...from && typeof from === 'object' ? {from: from.hex.toString('hex'), fromHex: from.hex.toString('hex')} : {from},
               ...to && typeof to === 'object' ? {to: to.hex.toString('hex'), toHex: to.hex.toString('hex')} : {to},
               value: BigInt(`0x${data.toString('hex')}`).toString()
@@ -704,19 +704,19 @@ class TransactionService extends Service {
     }
   }
 
-  async transformKLC20UnconfirmedTransfers(outputs) {
+  async transformKRC20UnconfirmedTransfers(outputs) {
     const {OutputScript, Solidity} = this.app.kalycoininfo.lib
-    const transferABI = Solidity.klc20ABIs.find(abi => abi.name === 'transfer')
-    const {Qrc20: KLC20} = this.ctx.model
+    const transferABI = Solidity.krc20ABIs.find(abi => abi.name === 'transfer')
+    const {Qrc20: KRC20} = this.ctx.model
     let result = []
     for (let output of outputs) {
       if (output.evmReceipt) {
-        let klc20 = await KLC20.findOne({
+        let krc20 = await KRC20.findOne({
           where: {contractAddress: output.addressHex},
           attributes: ['name', 'symbol', 'decimals'],
           transaction: this.ctx.state.transaction
         })
-        if (!klc20) {
+        if (!krc20) {
           continue
         }
         let scriptPubKey = OutputScript.fromBuffer(output.scriptPubKey)
@@ -736,9 +736,9 @@ class TransactionService extends Service {
         result.push({
           address: output.addressHex.toString('hex'),
           addressHex: output.addressHex.toString('hex'),
-          name: klc20.name,
-          symbol: klc20.symbol,
-          decimals: klc20.decimals,
+          name: krc20.name,
+          symbol: krc20.symbol,
+          decimals: krc20.decimals,
           from,
           ...to && typeof to === 'object' ? {to: to.string, toHex: to.hex.toString('hex')} : {to},
           value: value.toString()
@@ -750,19 +750,19 @@ class TransactionService extends Service {
     }
   }
 
-  async transformKLC721Transfers(outputs) {
-    const TransferABI = this.app.kalycoininfo.lib.Solidity.klc20ABIs.find(abi => abi.name === 'Transfer')
+  async transformKRC721Transfers(outputs) {
+    const TransferABI = this.app.kalycoininfo.lib.Solidity.krc20ABIs.find(abi => abi.name === 'Transfer')
     let result = []
     for (let output of outputs) {
       if (output.evmReceipt) {
-        for (let {addressHex, topics, klc721} of output.evmReceipt.logs) {
-          if (klc721 && topics.length === 4 && Buffer.compare(topics[0], TransferABI.id) === 0) {
+        for (let {addressHex, topics, krc721} of output.evmReceipt.logs) {
+          if (krc721 && topics.length === 4 && Buffer.compare(topics[0], TransferABI.id) === 0) {
             let [from, to] = await this.ctx.service.contract.transformHexAddresses([topics[1].slice(12), topics[2].slice(12)])
             result.push({
               address: addressHex.toString('hex'),
               addressHex: addressHex.toString('hex'),
-              name: klc721.name,
-              symbol: klc721.symbol,
+              name: krc721.name,
+              symbol: krc721.symbol,
               ...from && typeof from === 'object' ? {from: from.hex.toString('hex'), fromHex: from.hex.toString('hex')} : {from},
               ...to && typeof to === 'object' ? {to: to.hex.toString('hex'), toHex: to.hex.toString('hex')} : {to},
               tokenId: topics[3].toString('hex')

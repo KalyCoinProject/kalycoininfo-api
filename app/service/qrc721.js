@@ -1,28 +1,28 @@
 const {Service} = require('egg')
 
-class KLC721Service extends Service {
-  async listKLC721Tokens() {
+class KRC721Service extends Service {
+  async listKRC721Tokens() {
     const db = this.ctx.model
     const {sql} = this.ctx.helper
     let {limit, offset} = this.ctx.state.pagination
 
     let [{totalCount}] = await db.query(sql`
-      SELECT COUNT(DISTINCT(klc721_token.contract_address)) AS count FROM klc721_token
-      INNER JOIN klc721 USING (contract_address)
+      SELECT COUNT(DISTINCT(krc721_token.contract_address)) AS count FROM krc721_token
+      INNER JOIN krc721 USING (contract_address)
     `, {type: db.QueryTypes.SELECT, transaction: this.ctx.state.transaction})
     let list = await db.query(sql`
       SELECT
         contract.address_string AS address, contract.address AS addressHex,
-        klc721.name AS name, klc721.symbol AS symbol, klc721.total_supply AS totalSupply,
+        krc721.name AS name, krc721.symbol AS symbol, krc721.total_supply AS totalSupply,
         list.holders AS holders
       FROM (
-        SELECT contract_address, COUNT(*) AS holders FROM klc721_token
-        INNER JOIN klc721 USING (contract_address)
+        SELECT contract_address, COUNT(*) AS holders FROM krc721_token
+        INNER JOIN krc721 USING (contract_address)
         GROUP BY contract_address
         ORDER BY holders DESC
         LIMIT ${offset}, ${limit}
       ) list
-      INNER JOIN klc721 USING (contract_address)
+      INNER JOIN krc721 USING (contract_address)
       INNER JOIN contract ON contract.address = list.contract_address
       ORDER BY holders DESC
     `, {type: db.QueryTypes.SELECT, transaction: this.ctx.state.transaction})
@@ -40,7 +40,7 @@ class KLC721Service extends Service {
     }
   }
 
-  async getAllKLC721Balances(hexAddresses) {
+  async getAllKRC721Balances(hexAddresses) {
     if (hexAddresses.length === 0) {
       return []
     }
@@ -49,16 +49,16 @@ class KLC721Service extends Service {
     let list = await db.query(sql`
       SELECT
         contract.address AS addressHex, contract.address_string AS address,
-        klc721.name AS name,
-        klc721.symbol AS symbol,
-        klc721_token.count AS count
+        krc721.name AS name,
+        krc721.symbol AS symbol,
+        krc721_token.count AS count
       FROM (
-        SELECT contract_address, COUNT(*) AS count FROM klc721_token
+        SELECT contract_address, COUNT(*) AS count FROM krc721_token
         WHERE holder IN ${hexAddresses}
         GROUP BY contract_address
-      ) klc721_token
-      INNER JOIN contract ON contract.address = klc721_token.contract_address
-      INNER JOIN klc721 ON klc721.contract_address = klc721_token.contract_address
+      ) krc721_token
+      INNER JOIN contract ON contract.address = krc721_token.contract_address
+      INNER JOIN krc721 ON krc721.contract_address = krc721_token.contract_address
     `, {type: db.QueryTypes.SELECT, transaction: this.ctx.state.transaction})
     return list.map(item => ({
       address: item.addressHex.toString('hex'),
@@ -70,4 +70,4 @@ class KLC721Service extends Service {
   }
 }
 
-module.exports = KLC721Service
+module.exports = KRC721Service

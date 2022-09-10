@@ -1,31 +1,31 @@
 const {Service} = require('egg')
 
-class KLC20Service extends Service {
-  async listKLC20Tokens() {
+class KRC20Service extends Service {
+  async listKRC20Tokens() {
     const db = this.ctx.model
-    const {Qrc20Statistics: KLC20Statistics} = db
+    const {Qrc20Statistics: KRC20Statistics} = db
     const {sql} = this.ctx.helper
     const {gt: $gt} = this.app.Sequelize.Op
     let {limit, offset} = this.ctx.state.pagination
 
-    let totalCount = await KLC20Statistics.count({
+    let totalCount = await KRC20Statistics.count({
       where: {transactions: {[$gt]: 0}},
       transaction: this.ctx.state.transaction
     })
     let list = await db.query(sql`
       SELECT
         contract.address_string AS address, contract.address AS addressHex,
-        klc20.name AS name, klc20.symbol AS symbol, klc20.decimals AS decimals, klc20.total_supply AS totalSupply,
-        klc20.version AS version,
+        krc20.name AS name, krc20.symbol AS symbol, krc20.decimals AS decimals, krc20.total_supply AS totalSupply,
+        krc20.version AS version,
         list.holders AS holders,
         list.transactions AS transactions
       FROM (
-        SELECT contract_address, holders, transactions FROM klc20_statistics
+        SELECT contract_address, holders, transactions FROM krc20_statistics
         WHERE transactions > 0
         ORDER BY transactions DESC
         LIMIT ${offset}, ${limit}
       ) list
-      INNER JOIN klc20 USING (contract_address)
+      INNER JOIN krc20 USING (contract_address)
       INNER JOIN contract ON contract.address = list.contract_address
       ORDER BY transactions DESC
     `, {type: db.QueryTypes.SELECT, transaction: this.ctx.state.transaction})
@@ -46,19 +46,19 @@ class KLC20Service extends Service {
     }
   }
 
-  async getAllKLC20Balances(hexAddresses) {
+  async getAllKRC20Balances(hexAddresses) {
     if (hexAddresses.length === 0) {
       return []
     }
     const {OutputScript, Solidity} = this.app.kalycoininfo.lib
-    const transferABI = Solidity.klc20ABIs.find(abi => abi.name === 'transfer')
+    const transferABI = Solidity.krc20ABIs.find(abi => abi.name === 'transfer')
     const {
       Address, TransactionOutput,
-      Contract, EvmReceipt: EVMReceipt, Qrc20: KLC20, Qrc20Balance: KLC20Balance,
+      Contract, EvmReceipt: EVMReceipt, Qrc20: KRC20, Qrc20Balance: KRC20Balance,
       where, col
     } = this.ctx.model
     const {in: $in} = this.app.Sequelize.Op
-    let list = await KLC20.findAll({
+    let list = await KRC20.findAll({
       attributes: ['contractAddress', 'name', 'symbol', 'decimals'],
       include: [{
         model: Contract,
@@ -66,8 +66,8 @@ class KLC20Service extends Service {
         required: true,
         attributes: ['addressString'],
         include: [{
-          model: KLC20Balance,
-          as: 'klc20Balances',
+          model: KRC20Balance,
+          as: 'krc20Balances',
           required: true,
           where: {address: {[$in]: hexAddresses}},
           attributes: ['balance']
@@ -83,7 +83,7 @@ class KLC20Service extends Service {
         name: item.name,
         symbol: item.symbol,
         decimals: item.decimals,
-        balance: item.contract.klc20Balances.map(({balance}) => balance).reduce((x, y) => x + y),
+        balance: item.contract.krc20Balances.map(({balance}) => balance).reduce((x, y) => x + y),
         unconfirmed: {
           received: 0n,
           sent: 0n
@@ -114,8 +114,8 @@ class KLC20Service extends Service {
               required: true,
               attributes: ['address', 'addressString'],
               include: [{
-                model: KLC20,
-                as: 'klc20',
+                model: KRC20,
+                as: 'krc20',
                 required: true,
                 attributes: ['name', 'symbol', 'decimals']
               }]
@@ -142,9 +142,9 @@ class KLC20Service extends Service {
           data = {
             address: item.output.address.contract.address.toString('hex'),
             addressHex: item.output.address.contract.address,
-            name: item.output.address.contract.klc20.name,
-            symbol: item.output.address.contract.klc20.symbol,
-            decimals: item.output.address.contract.klc20.decimals,
+            name: item.output.address.contract.krc20.name,
+            symbol: item.output.address.contract.krc20.symbol,
+            decimals: item.output.address.contract.krc20.decimals,
             balance: 0n,
             unconfirmed: {
               received: 0n,
@@ -173,12 +173,12 @@ class KLC20Service extends Service {
     return [...mapping.values()].filter(item => !item.isNew)
   }
 
-  async getKLC20Balance(rawAddresses, tokenAddress) {
+  async getKRC20Balance(rawAddresses, tokenAddress) {
     const {Address: RawAddress, OutputScript, Solidity} = this.app.kalycoininfo.lib
-    const transferABI = Solidity.klc20ABIs.find(abi => abi.name === 'transfer')
+    const transferABI = Solidity.krc20ABIs.find(abi => abi.name === 'transfer')
     const {
       Address, TransactionOutput,
-      Contract, EvmReceipt: EVMReceipt, Qrc20: KLC20, Qrc20Balance: KLC20Balance,
+      Contract, EvmReceipt: EVMReceipt, Qrc20: KRC20, Qrc20Balance: KRC20Balance,
       where, col
     } = this.ctx.model
     const {in: $in} = this.app.Sequelize.Op
@@ -188,12 +188,12 @@ class KLC20Service extends Service {
     if (hexAddresses.length === 0) {
       return []
     }
-    let token = await KLC20.findOne({
+    let token = await KRC20.findOne({
       where: {contractAddress: tokenAddress},
       attributes: ['name', 'symbol', 'decimals'],
       transaction: this.ctx.state.transaction
     })
-    let list = await KLC20Balance.findAll({
+    let list = await KRC20Balance.findAll({
       where: {contractAddress: tokenAddress, address: {[$in]: hexAddresses}},
       attributes: ['balance'],
       transaction: this.ctx.state.transaction
@@ -261,14 +261,14 @@ class KLC20Service extends Service {
     }
   }
 
-  async getKLC20BalanceHistory(addresses, tokenAddress) {
-    const TransferABI = this.app.kalycoininfo.lib.Solidity.klc20ABIs.find(abi => abi.name === 'Transfer')
+  async getKRC20BalanceHistory(addresses, tokenAddress) {
+    const TransferABI = this.app.kalycoininfo.lib.Solidity.krc20ABIs.find(abi => abi.name === 'Transfer')
     const db = this.ctx.model
     const {sql} = this.ctx.helper
     const {
       Header, Transaction,
       EvmReceipt: EVMReceipt, EvmReceiptLog: EVMReceiptLog,
-      Contract, Qrc20: KLC20, Qrc20Balance: KLC20Balance,
+      Contract, Qrc20: KRC20, Qrc20Balance: KRC20Balance,
       literal
     } = db
     const {ne: $ne, and: $and, or: $or, in: $in} = this.app.Sequelize.Op
@@ -289,8 +289,8 @@ class KLC20Service extends Service {
 
     let [{totalCount}] = await db.query(sql`
       SELECT COUNT(DISTINCT(receipt.transaction_id)) AS totalCount
-      FROM evm_receipt receipt, evm_receipt_log log, klc20
-      WHERE receipt._id = log.receipt_id AND log.address = klc20.contract_address AND ${{raw: logFilter}}
+      FROM evm_receipt receipt, evm_receipt_log log, krc20
+      WHERE receipt._id = log.receipt_id AND log.address = krc20.contract_address AND ${{raw: logFilter}}
     `, {type: db.QueryTypes.SELECT, transaction: this.ctx.state.transaction})
     if (totalCount === 0) {
       return {totalCount: 0, transactions: []}
@@ -298,8 +298,8 @@ class KLC20Service extends Service {
     let ids = (await db.query(sql`
       SELECT transaction_id AS id FROM evm_receipt receipt
       INNER JOIN (
-        SELECT DISTINCT(receipt.transaction_id) AS id FROM evm_receipt receipt, evm_receipt_log log, klc20
-        WHERE receipt._id = log.receipt_id AND log.address = klc20.contract_address AND ${{raw: logFilter}}
+        SELECT DISTINCT(receipt.transaction_id) AS id FROM evm_receipt receipt, evm_receipt_log log, krc20
+        WHERE receipt._id = log.receipt_id AND log.address = krc20.contract_address AND ${{raw: logFilter}}
       ) list ON list.id = receipt.transaction_id
       ORDER BY receipt.block_height ${{raw: order}}, receipt.index_in_block ${{raw: order}},
         receipt.transaction_id ${{raw: order}}, receipt.output_index ${{raw: order}}
@@ -345,8 +345,8 @@ class KLC20Service extends Service {
               attributes: ['addressString']
             },
             {
-              model: KLC20,
-              as: 'klc20',
+              model: KRC20,
+              as: 'krc20',
               required: true,
               attributes: ['name', 'symbol', 'decimals']
             }
@@ -362,7 +362,7 @@ class KLC20Service extends Service {
     }
     let initialBalanceMap = new Map()
     if (list.length > 0) {
-      let intialBalanceList = await KLC20Balance.findAll({
+      let intialBalanceList = await KRC20Balance.findAll({
         where: {
           ...tokenAddress ? {contractAddress: tokenAddress} : {},
           address: {[$in]: addresses}
@@ -452,9 +452,9 @@ class KLC20Service extends Service {
           result.tokens.push({
             address,
             addressHex: log.address,
-            name: log.klc20.name.toString(),
-            symbol: log.klc20.symbol.toString(),
-            decimals: log.klc20.decimals,
+            name: log.krc20.name.toString(),
+            symbol: log.krc20.symbol.toString(),
+            decimals: log.krc20.decimals,
             amount: delta
           })
         }
@@ -474,8 +474,8 @@ class KLC20Service extends Service {
     return {totalCount, transactions}
   }
 
-  async getAllKLC20TokenTransactions() {
-    const TransferABI = this.app.kalycoininfo.lib.Solidity.klc20ABIs.find(abi => abi.name === 'Transfer')
+  async getAllKRC20TokenTransactions() {
+    const TransferABI = this.app.kalycoininfo.lib.Solidity.krc20ABIs.find(abi => abi.name === 'Transfer')
     const db = this.ctx.model
     const {sql} = this.ctx.helper
     let {limit, offset, reversed = true} = this.ctx.state.pagination
@@ -483,8 +483,8 @@ class KLC20Service extends Service {
 
     let [{totalCount}] = await db.query(sql`
       SELECT COUNT(*) AS totalCount
-      FROM klc20, evm_receipt_log log
-      WHERE klc20.contract_address = log.address AND log.topic1 = ${TransferABI.id}
+      FROM krc20, evm_receipt_log log
+      WHERE krc20.contract_address = log.address AND log.topic1 = ${TransferABI.id}
     `, {type: db.QueryTypes.SELECT, transaction: this.ctx.state.transaction})
     let transactions = await db.query(sql`
       SELECT
@@ -493,20 +493,20 @@ class KLC20Service extends Service {
         evm_receipt.block_height AS blockHeight,
         header.hash AS blockHash,
         header.timestamp AS timestamp,
-        klc20.name AS name,
-        klc20.symbol AS symbol,
-        klc20.decimals AS decimals,
+        krc20.name AS name,
+        krc20.symbol AS symbol,
+        krc20.decimals AS decimals,
         evm_receipt_log.topic2 AS topic2,
         evm_receipt_log.topic3 AS topic3,
         evm_receipt_log.data AS data
       FROM (
-        SELECT log._id AS _id FROM klc20, evm_receipt_log log
-        WHERE klc20.contract_address = log.address AND log.topic1 = ${TransferABI.id}
+        SELECT log._id AS _id FROM krc20, evm_receipt_log log
+        WHERE krc20.contract_address = log.address AND log.topic1 = ${TransferABI.id}
         ORDER BY log._id ${{raw: order}} LIMIT ${offset}, ${limit}
       ) list
       INNER JOIN evm_receipt_log ON evm_receipt_log._id = list._id
       INNER JOIN evm_receipt ON evm_receipt._id = evm_receipt_log.receipt_id
-      INNER JOIN klc20 ON klc20.contract_address = evm_receipt_log.address
+      INNER JOIN krc20 ON krc20.contract_address = evm_receipt_log.address
       INNER JOIN transaction ON transaction._id = evm_receipt.transaction_id
       INNER JOIN header ON header.height = evm_receipt.block_height
       ORDER BY list._id ${{raw: order}}
@@ -539,8 +539,8 @@ class KLC20Service extends Service {
     }
   }
 
-  async getKLC20TokenTransactions(contractAddress) {
-    const TransferABI = this.app.kalycoininfo.lib.Solidity.klc20ABIs.find(abi => abi.name === 'Transfer')
+  async getKRC20TokenTransactions(contractAddress) {
+    const TransferABI = this.app.kalycoininfo.lib.Solidity.krc20ABIs.find(abi => abi.name === 'Transfer')
     const db = this.ctx.model
     const {EvmReceiptLog: EVMReceiptLog} = db
     const {sql} = this.ctx.helper
@@ -598,17 +598,17 @@ class KLC20Service extends Service {
     }
   }
 
-  async getKLC20TokenRichList(contractAddress) {
+  async getKRC20TokenRichList(contractAddress) {
     const db = this.ctx.model
-    const {Qrc20Balance: KLC20Balance} = db
+    const {Qrc20Balance: KRC20Balance} = db
     const {ne: $ne} = this.app.Sequelize.Op
     let {limit, offset} = this.ctx.state.pagination
 
-    let totalCount = await KLC20Balance.count({
+    let totalCount = await KRC20Balance.count({
       where: {contractAddress, balance: {[$ne]: Buffer.alloc(32)}},
       transaction: this.ctx.state.transaction
     })
-    let list = await KLC20Balance.findAll({
+    let list = await KRC20Balance.findAll({
       where: {contractAddress, balance: {[$ne]: Buffer.alloc(32)}},
       attributes: ['address', 'balance'],
       order: [['balance', 'DESC']],
@@ -632,18 +632,18 @@ class KLC20Service extends Service {
     }
   }
 
-  async updateKLC20Statistics() {
-    const TransferABI = this.app.kalycoininfo.lib.Solidity.klc20ABIs.find(abi => abi.name === 'Transfer')
+  async updateKRC20Statistics() {
+    const TransferABI = this.app.kalycoininfo.lib.Solidity.krc20ABIs.find(abi => abi.name === 'Transfer')
     const db = this.ctx.model
-    const {Qrc20: KLC20, Qrc20Statistics: KLC20Statistics} = db
+    const {Qrc20: KRC20, Qrc20Statistics: KRC20Statistics} = db
     const {sql} = this.ctx.helper
     let transaction = await db.transaction()
     try {
-      let result = (await KLC20.findAll({attributes: ['contractAddress'], transaction})).map(
+      let result = (await KRC20.findAll({attributes: ['contractAddress'], transaction})).map(
         ({contractAddress}) => ({contractAddress, holders: 0, transactions: 0})
       )
       let balanceResults = await db.query(sql`
-        SELECT contract_address AS contractAddress, COUNT(*) AS count FROM klc20_balance
+        SELECT contract_address AS contractAddress, COUNT(*) AS count FROM krc20_balance
         WHERE balance != ${Buffer.alloc(32)}
         GROUP BY contractAddress ORDER BY contractAddress
       `, {type: db.QueryTypes.SELECT, transaction})
@@ -686,8 +686,8 @@ class KLC20Service extends Service {
           }
         }
       }
-      await db.query(sql`DELETE FROM klc20_statistics`, {transaction})
-      await KLC20Statistics.bulkCreate(result, {validate: false, transaction, logging: false})
+      await db.query(sql`DELETE FROM krc20_statistics`, {transaction})
+      await KRC20Statistics.bulkCreate(result, {validate: false, transaction, logging: false})
       await transaction.commit()
     } catch (err) {
       await transaction.rollback()
@@ -695,4 +695,4 @@ class KLC20Service extends Service {
   }
 }
 
-module.exports = KLC20Service
+module.exports = KRC20Service

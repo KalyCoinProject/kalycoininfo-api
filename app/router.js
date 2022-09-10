@@ -68,9 +68,9 @@ module.exports = app => {
     controller.address.matureBalance
   )
   router.get(
-    '/address/:address/klc20-balance/:token',
+    '/address/:address/krc20-balance/:token',
     addressMiddleware, middleware.contract('token'),
-    controller.address.klc20TokenBalance
+    controller.address.krc20TokenBalance
   )
   router.get(
     '/address/:address/txs',
@@ -93,14 +93,14 @@ module.exports = app => {
     controller.address.contractTransactions
   )
   router.get(
-    '/address/:address/klc20-txs/:token',
+    '/address/:address/krc20-txs/:token',
     addressMiddleware, middleware.contract('token'), paginationMiddleware,
-    controller.address.klc20TokenTransactions
+    controller.address.krc20TokenTransactions
   )
   router.get(
-    '/address/:address/klc20-mempool-txs/:token',
+    '/address/:address/krc20-mempool-txs/:token',
     addressMiddleware, middleware.contract('token'),
-    controller.address.klc20TokenMempoolTransactions
+    controller.address.krc20TokenMempoolTransactions
   )
   router.get(
     '/address/:address/utxo',
@@ -113,14 +113,14 @@ module.exports = app => {
     controller.address.balanceHistory
   )
   router.get(
-    '/address/:address/klc20-balance-history',
+    '/address/:address/krc20-balance-history',
     addressMiddleware, paginationMiddleware,
-    controller.address.klc20BalanceHistory
+    controller.address.krc20BalanceHistory
   )
   router.get(
-    '/address/:address/klc20-balance-history/:token',
+    '/address/:address/krc20-balance-history/:token',
     addressMiddleware, middleware.contract('token'), paginationMiddleware,
-    controller.address.klc20BalanceHistory
+    controller.address.krc20BalanceHistory
   )
 
   router.get(
@@ -144,14 +144,14 @@ module.exports = app => {
     controller.contract.balanceHistory
   )
   router.get(
-    '/contract/:contract/klc20-balance-history',
+    '/contract/:contract/krc20-balance-history',
     contractMiddleware, paginationMiddleware,
-    controller.contract.klc20BalanceHistory
+    controller.contract.krc20BalanceHistory
   )
   router.get(
-    '/contract/:contract/klc20-balance-history/:token',
+    '/contract/:contract/krc20-balance-history/:token',
     contractMiddleware, middleware.contract('token'), paginationMiddleware,
-    controller.contract.klc20BalanceHistory
+    controller.contract.krc20BalanceHistory
   )
   router.get(
     '/contract/:contract/call',
@@ -164,29 +164,29 @@ module.exports = app => {
     controller.contract.searchLogs
   )
   router.get(
-    '/klc20',
+    '/krc20',
     paginationMiddleware,
-    controller.klc20.list
+    controller.krc20.list
   )
   router.get(
-    '/klc20/txs',
+    '/krc20/txs',
     paginationMiddleware,
-    controller.klc20.allTransactions
+    controller.krc20.allTransactions
   )
   router.get(
-    '/klc20/:token/txs',
+    '/krc20/:token/txs',
     middleware.contract('token'), paginationMiddleware, blockFilterMiddleware,
-    controller.klc20.transactions
+    controller.krc20.transactions
   )
   router.get(
-    '/klc20/:token/rich-list',
+    '/krc20/:token/rich-list',
     middleware.contract('token'), paginationMiddleware,
-    controller.klc20.richList
+    controller.krc20.richList
   )
   router.get(
-    '/klc721',
+    '/krc721',
     paginationMiddleware,
-    controller.klc721.list
+    controller.krc721.list
   )
 
   router.get(`/search`, controller.misc.classify)

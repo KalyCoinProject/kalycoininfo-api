@@ -1,9 +1,9 @@
 const {Controller} = require('egg')
 
-class KLC721Controller extends Controller {
+class KRC721Controller extends Controller {
   async list() {
     const {ctx} = this
-    let {totalCount, tokens} = await ctx.service.klc721.listKLC721Tokens()
+    let {totalCount, tokens} = await ctx.service.krc721.listKRC721Tokens()
     ctx.body = {
       totalCount,
       tokens: tokens.map(item => ({
@@ -18,4 +18,4 @@ class KLC721Controller extends Controller {
   }
 }
 
-module.exports = KLC721Controller
+module.exports = KRC721Controller

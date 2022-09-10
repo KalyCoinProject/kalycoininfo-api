@@ -1,7 +1,7 @@
 module.exports = app => {
   const {CHAR} = app.Sequelize
 
-  let KLC20Balance = app.model.define('klc20_balance', {
+  let KRC20Balance = app.model.define('krc20_balance', {
     contractAddress: {
       type: CHAR(20).BINARY,
       primaryKey: true
@@ -25,11 +25,11 @@ module.exports = app => {
     }
   }, {freezeTableName: true, underscored: true, timestamps: false})
 
-  KLC20Balance.associate = () => {
+  KRC20Balance.associate = () => {
     const {Contract} = app.model
-    Contract.hasMany(KLC20Balance, {as: 'klc20Balances', foreignKey: 'contractAddress'})
-    KLC20Balance.belongsTo(Contract, {as: 'contract', foreignKey: 'contractAddress'})
+    Contract.hasMany(KRC20Balance, {as: 'krc20Balances', foreignKey: 'contractAddress'})
+    KRC20Balance.belongsTo(Contract, {as: 'contract', foreignKey: 'contractAddress'})
   }
 
-  return KLC20Balance
+  return KRC20Balance
 }

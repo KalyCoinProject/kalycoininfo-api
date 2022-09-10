@@ -34,26 +34,26 @@ class ContractService extends Service {
   }
 
   async getContractSummary(contractAddress, addressIds) {
-    const {Contract, Qrc20: KLC20, Qrc20Statistics: KLC20Statistics, Qrc721: KLC721} = this.ctx.model
-    const {balance: balanceService, klc20: klc20Service, klc721: klc721Service} = this.ctx.service
+    const {Contract, Qrc20: KRC20, Qrc20Statistics: KRC20Statistics, Qrc721: KRC721} = this.ctx.model
+    const {balance: balanceService, krc20: krc20Service, krc721: krc721Service} = this.ctx.service
     let contract = await Contract.findOne({
       where: {address: contractAddress},
       attributes: ['addressString', 'vm', 'type'],
       include: [
         {
-          model: KLC20,
-          as: 'klc20',
+          model: KRC20,
+          as: 'krc20',
           required: false,
           attributes: ['name', 'symbol', 'decimals', 'totalSupply', 'version'],
           include: [{
-            model: KLC20Statistics,
+            model: KRC20Statistics,
             as: 'statistics',
             required: true
           }]
         },
         {
-          model: KLC721,
-          as: 'klc721',
+          model: KRC721,
+          as: 'krc721',
           required: false,
           attributes: ['name', 'symbol', 'totalSupply']
         }
@@ -63,14 +63,14 @@ class ContractService extends Service {
     let [
       {totalReceived, totalSent},
       unconfirmed,
-      klc20Balances,
-      klc721Balances,
+      krc20Balances,
+      krc721Balances,
       transactionCount
     ] = await Promise.all([
       balanceService.getTotalBalanceChanges(addressIds),
       balanceService.getUnconfirmedBalance(addressIds),
-      klc20Service.getAllKLC20Balances([contractAddress]),
-      klc721Service.getAllKLC721Balances([contractAddress]),
+      krc20Service.getAllKRC20Balances([contractAddress]),
+      krc721Service.getAllKRC721Balances([contractAddress]),
       this.getContractTransactionCount(contractAddress, addressIds)
     ])
     return {
@@ -78,36 +78,36 @@ class ContractService extends Service {
       addressHex: contractAddress,
       vm: contract.vm,
       type: contract.type,
-      ...contract.type === 'klc20' ? {
-        klc20: {
-          name: contract.klc20.name,
-          symbol: contract.klc20.symbol,
-          decimals: contract.klc20.decimals,
-          totalSupply: contract.klc20.totalSupply,
-          version: contract.klc20.version,
-          holders: contract.klc20.statistics.holders,
-          transactions: contract.klc20.statistics.transactions
+      ...contract.type === 'krc20' ? {
+        krc20: {
+          name: contract.krc20.name,
+          symbol: contract.krc20.symbol,
+          decimals: contract.krc20.decimals,
+          totalSupply: contract.krc20.totalSupply,
+          version: contract.krc20.version,
+          holders: contract.krc20.statistics.holders,
+          transactions: contract.krc20.statistics.transactions
         }
       } : {},
-      ...contract.type === 'klc721' ? {
-        klc721: {
-          name: contract.klc721.name,
-          symbol: contract.klc721.symbol,
-          totalSupply: contract.klc721.totalSupply
+      ...contract.type === 'krc721' ? {
+        krc721: {
+          name: contract.krc721.name,
+          symbol: contract.krc721.symbol,
+          totalSupply: contract.krc721.totalSupply
         }
       } : {},
       balance: totalReceived - totalSent,
       totalReceived,
       totalSent,
       unconfirmed,
-      klc20Balances,
-      klc721Balances,
+      krc20Balances,
+      krc721Balances,
       transactionCount
     }
   }
 
   async getContractTransactionCount(contractAddress, addressIds) {
-    const TransferABI = this.app.kalycoininfo.lib.Solidity.klc20ABIs.find(abi => abi.name === 'Transfer')
+    const TransferABI = this.app.kalycoininfo.lib.Solidity.krc20ABIs.find(abi => abi.name === 'Transfer')
     const db = this.ctx.model
     let {sql} = this.ctx.helper
     let topic = Buffer.concat([Buffer.alloc(12), contractAddress])
@@ -126,12 +126,12 @@ class ContractService extends Service {
         SELECT receipt.transaction_id AS transaction_id FROM evm_receipt receipt, evm_receipt_log log, contract
         WHERE log.receipt_id = receipt._id
           AND ${this.ctx.service.block.getRawBlockFilter('receipt.block_height')}
-          AND contract.address = log.address AND contract.type IN ('klc20', 'klc721')
+          AND contract.address = log.address AND contract.type IN ('krc20', 'krc721')
           AND log.topic1 = ${TransferABI.id}
           AND (log.topic2 = ${topic} OR log.topic3 = ${topic})
           AND (
-            (contract.type = 'klc20' AND log.topic3 IS NOT NULL AND log.topic4 IS NULL)
-            OR (contract.type = 'klc721' AND log.topic4 IS NOT NULL)
+            (contract.type = 'krc20' AND log.topic3 IS NOT NULL AND log.topic4 IS NULL)
+            OR (contract.type = 'krc721' AND log.topic4 IS NOT NULL)
           )
       ) list
     `, {type: db.QueryTypes.SELECT, transaction: this.ctx.state.transaction})
@@ -139,7 +139,7 @@ class ContractService extends Service {
   }
 
   async getContractTransactions(contractAddress, addressIds) {
-    const TransferABI = this.app.kalycoininfo.lib.Solidity.klc20ABIs.find(abi => abi.name === 'Transfer')
+    const TransferABI = this.app.kalycoininfo.lib.Solidity.krc20ABIs.find(abi => abi.name === 'Transfer')
     const db = this.ctx.model
     let {sql} = this.ctx.helper
     let {limit, offset, reversed = true} = this.ctx.state.pagination
@@ -164,12 +164,12 @@ class ContractService extends Service {
           FROM evm_receipt receipt, evm_receipt_log log, contract
           WHERE log.receipt_id = receipt._id
             AND ${this.ctx.service.block.getRawBlockFilter('receipt.block_height')}
-            AND contract.address = log.address AND contract.type IN ('klc20', 'klc721')
+            AND contract.address = log.address AND contract.type IN ('krc20', 'krc721')
             AND log.topic1 = ${TransferABI.id}
             AND (log.topic2 = ${topic} OR log.topic3 = ${topic})
             AND (
-              (contract.type = 'klc20' AND log.topic3 IS NOT NULL AND log.topic4 IS NULL)
-              OR (contract.type = 'klc721' AND log.topic4 IS NOT NULL)
+              (contract.type = 'krc20' AND log.topic3 IS NOT NULL AND log.topic4 IS NULL)
+              OR (contract.type = 'krc721' AND log.topic4 IS NOT NULL)
             )
         ) list
         ORDER BY block_height ${{raw: order}}, index_in_block ${{raw: order}}, _id ${{raw: order}}

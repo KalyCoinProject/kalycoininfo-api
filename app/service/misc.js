@@ -3,7 +3,7 @@ const {Service} = require('egg')
 class MiscService extends Service {
   async classify(id) {
     const db = this.ctx.model
-    const {Block, Transaction, Contract, Qrc20: KLC20, where, fn, literal} = db
+    const {Block, Transaction, Contract, Qrc20: KRC20, where, fn, literal} = db
     const {or: $or, like: $like} = this.app.Sequelize.Op
     const {Address} = this.app.kalycoininfo.lib
     const {sql} = this.ctx.helper
@@ -46,7 +46,7 @@ class MiscService extends Service {
       }
     } catch (err) {}
 
-    let klc20Results = (await KLC20.findAll({
+    let krc20Results = (await KRC20.findAll({
       where: {
         [$or]: [
           where(fn('LOWER', fn('CONVERT', literal('name USING utf8mb4'))), id.toLowerCase()),
@@ -55,9 +55,9 @@ class MiscService extends Service {
       },
       attributes: ['contractAddress'],
       transaction
-    })).map(klc20 => klc20.contractAddress)
-    if (klc20Results.length === 0) {
-      klc20Results = (await KLC20.findAll({
+    })).map(krc20 => krc20.contractAddress)
+    if (krc20Results.length === 0) {
+      krc20Results = (await KRC20.findAll({
         where: {
           [$or]: [
             where(fn('LOWER', fn('CONVERT', literal('name USING utf8mb4'))), {[$like]: ['', ...id.toLowerCase(), ''].join('%')}),
@@ -68,16 +68,16 @@ class MiscService extends Service {
         },
         attributes: ['contractAddress'],
         transaction
-      })).map(klc20 => klc20.contractAddress)
+      })).map(krc20 => krc20.contractAddress)
     }
-    if (klc20Results.length) {
+    if (krc20Results.length) {
       let [{addressHex}] = await db.query(sql`
         SELECT contract.address_string AS address, contract.address AS addressHex FROM (
-          SELECT contract_address FROM klc20_statistics
-          WHERE contract_address IN ${klc20Results}
+          SELECT contract_address FROM krc20_statistics
+          WHERE contract_address IN ${krc20Results}
           ORDER BY transactions DESC LIMIT 1
-        ) klc20_balance
-        INNER JOIN contract ON contract.address = klc20_balance.contract_address
+        ) krc20_balance
+        INNER JOIN contract ON contract.address = krc20_balance.contract_address
       `, {type: db.QueryTypes.SELECT, transaction})
       return {type: 'contract', address: addressHex.toString('hex'), addressHex: addressHex.toString('hex')}
     }

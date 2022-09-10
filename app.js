@@ -13,9 +13,9 @@ module.exports = app => {
     await ctx.service.balance.updateRichList()
   })
 
-  app.messenger.on('update-klc20-statistics', async () => {
+  app.messenger.on('update-krc20-statistics', async () => {
     let ctx = app.createAnonymousContext()
-    await ctx.service.klc20.updateKLC20Statistics()
+    await ctx.service.krc20.updateKRC20Statistics()
   })
 
   app.messenger.on('update-daily-transactions', async () => {

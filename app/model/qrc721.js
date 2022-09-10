@@ -1,7 +1,7 @@
 module.exports = app => {
   const {CHAR, BLOB} = app.Sequelize
 
-  let KLC721 = app.model.define('klc721', {
+  let KRC721 = app.model.define('krc721', {
     contractAddress: {
       type: CHAR(20).BINARY,
       primaryKey: true
@@ -39,13 +39,13 @@ module.exports = app => {
     }
   }, {freezeTableName: true, underscored: true, timestamps: false})
 
-  KLC721.associate = () => {
+  KRC721.associate = () => {
     const {EvmReceiptLog: EVMReceiptLog, Contract} = app.model
-    EVMReceiptLog.belongsTo(KLC721, {as: 'klc721', foreignKey: 'address', sourceKey: 'contractAddress'})
-    KLC721.hasOne(EVMReceiptLog, {as: 'logs', foreignKey: 'address', sourceKey: 'contractAddress'})
-    Contract.hasOne(KLC721, {as: 'klc721', foreignKey: 'contractAddress'})
-    KLC721.belongsTo(Contract, {as: 'contract', foreignKey: 'contractAddress'})
+    EVMReceiptLog.belongsTo(KRC721, {as: 'krc721', foreignKey: 'address', sourceKey: 'contractAddress'})
+    KRC721.hasOne(EVMReceiptLog, {as: 'logs', foreignKey: 'address', sourceKey: 'contractAddress'})
+    Contract.hasOne(KRC721, {as: 'krc721', foreignKey: 'contractAddress'})
+    KRC721.belongsTo(Contract, {as: 'contract', foreignKey: 'contractAddress'})
   }
 
-  return KLC721
+  return KRC721
 }

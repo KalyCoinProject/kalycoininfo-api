@@ -1,9 +1,9 @@
 const {Controller} = require('egg')
 
-class KLC20Controller extends Controller {
+class KRC20Controller extends Controller {
   async list() {
     const {ctx} = this
-    let {totalCount, tokens} = await ctx.service.klc20.listKLC20Tokens()
+    let {totalCount, tokens} = await ctx.service.krc20.listKRC20Tokens()
     ctx.body = {
       totalCount,
       tokens: tokens.map(item => ({
@@ -22,7 +22,7 @@ class KLC20Controller extends Controller {
 
   async allTransactions() {
     const {ctx} = this
-    let {totalCount, transactions} = await ctx.service.klc20.getAllKLC20TokenTransactions()
+    let {totalCount, transactions} = await ctx.service.krc20.getAllKRC20TokenTransactions()
     ctx.body = {
       totalCount,
       transactions: transactions.map(transaction => ({
@@ -47,8 +47,8 @@ class KLC20Controller extends Controller {
 
   async transactions() {
     const {ctx} = this
-    ctx.assert(ctx.state.token.type === 'klc20', 404)
-    let {totalCount, transactions} = await ctx.service.klc20.getKLC20TokenTransactions(ctx.state.token.contractAddress)
+    ctx.assert(ctx.state.token.type === 'krc20', 404)
+    let {totalCount, transactions} = await ctx.service.krc20.getKRC20TokenTransactions(ctx.state.token.contractAddress)
     ctx.body = {
       totalCount,
       transactions: transactions.map(transaction => ({
@@ -68,8 +68,8 @@ class KLC20Controller extends Controller {
 
   async richList() {
     const {ctx} = this
-    ctx.assert(ctx.state.token.type === 'klc20', 404)
-    let {totalCount, list} = await ctx.service.klc20.getKLC20TokenRichList(ctx.state.token.contractAddress)
+    ctx.assert(ctx.state.token.type === 'krc20', 404)
+    let {totalCount, list} = await ctx.service.krc20.getKRC20TokenRichList(ctx.state.token.contractAddress)
     ctx.body = {
       totalCount,
       list: list.map(item => ({
@@ -81,4 +81,4 @@ class KLC20Controller extends Controller {
   }
 }
 
-module.exports = KLC20Controller
+module.exports = KRC20Controller

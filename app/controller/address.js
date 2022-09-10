@@ -12,7 +12,7 @@ class AddressController extends Controller {
       unconfirmed: summary.unconfirmed.toString(),
       staking: summary.staking.toString(),
       mature: summary.mature.toString(),
-      klc20Balances: summary.klc20Balances.map(item => ({
+      krc20Balances: summary.krc20Balances.map(item => ({
         address: item.addressHex.toString('hex'),
         addressHex: item.addressHex.toString('hex'),
         name: item.name,
@@ -25,7 +25,7 @@ class AddressController extends Controller {
         },
         isUnconfirmed: item.isUnconfirmed
       })),
-      klc721Balances: summary.klc721Balances.map(item => ({
+      krc721Balances: summary.krc721Balances.map(item => ({
         address: item.addressHex.toString('hex'),
         addressHex: item.addressHex.toString('hex'),
         name: item.name,
@@ -74,13 +74,13 @@ class AddressController extends Controller {
     ctx.body = unconfirmed.toString()
   }
 
-  async klc20TokenBalance() {
+  async krc20TokenBalance() {
     let {ctx} = this
     let {address, token} = ctx.state
-    if (token.type !== 'klc20') {
+    if (token.type !== 'krc20') {
       ctx.body = {}
     }
-    let {name, symbol, decimals, balance, unconfirmed} = await ctx.service.klc20.getKLC20Balance(address.rawAddresses, token.contractAddress)
+    let {name, symbol, decimals, balance, unconfirmed} = await ctx.service.krc20.getKRC20Balance(address.rawAddresses, token.contractAddress)
     ctx.body = {
       name,
       symbol,
@@ -160,10 +160,10 @@ class AddressController extends Controller {
     }
   }
 
-  async klc20TokenTransactions() {
+  async krc20TokenTransactions() {
     let {ctx} = this
     let {address, token} = ctx.state
-    let {totalCount, transactions} = await ctx.service.address.getAddressKLC20TokenTransactions(address.rawAddresses, token)
+    let {totalCount, transactions} = await ctx.service.address.getAddressKRC20TokenTransactions(address.rawAddresses, token)
     ctx.body = {
       totalCount,
       transactions: transactions.map(transaction => ({
@@ -183,10 +183,10 @@ class AddressController extends Controller {
     }
   }
 
-  async klc20TokenMempoolTransactions() {
+  async krc20TokenMempoolTransactions() {
     let {ctx} = this
     let {address, token} = ctx.state
-    let transactions = await ctx.service.address.getAddressKLC20TokenMempoolTransactions(address.rawAddresses, token)
+    let transactions = await ctx.service.address.getAddressKRC20TokenMempoolTransactions(address.rawAddresses, token)
     ctx.body = transactions.map(transaction => ({
       transactionId: transaction.transactionId.toString('hex'),
       outputIndex: transaction.outputIndex,
@@ -232,12 +232,12 @@ class AddressController extends Controller {
     }
   }
 
-  async klc20BalanceHistory() {
+  async krc20BalanceHistory() {
     const {Address} = this.app.kalycoininfo.lib
     let {ctx} = this
     let tokenAddress = null
     if (ctx.state.token) {
-      if (ctx.state.token.type === 'klc20') {
+      if (ctx.state.token.type === 'krc20') {
         tokenAddress = ctx.state.token.contractAddress
       } else {
         ctx.body = {
@@ -250,7 +250,7 @@ class AddressController extends Controller {
     let hexAddresses = ctx.state.address.rawAddresses
       .filter(address => address.type === Address.PAY_TO_PUBLIC_KEY_HASH)
       .map(address => address.data)
-    let {totalCount, transactions} = await ctx.service.klc20.getKLC20BalanceHistory(hexAddresses, tokenAddress)
+    let {totalCount, transactions} = await ctx.service.krc20.getKRC20BalanceHistory(hexAddresses, tokenAddress)
     ctx.body = {
       totalCount,
       transactions: transactions.map(tx => ({

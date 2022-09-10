@@ -1,16 +1,16 @@
-# KLC20 API
+# KRC20 API
 
-- [KLC20 API](#KLC20-API)
-  - [KLC20 list](#KLC20-list)
-  - [KLC20 Transaction list](#KLC20-Transaction-list)
+- [KRC20 API](#KRC20-API)
+  - [KRC20 list](#KRC20-list)
+  - [KRC20 Transaction list](#KRC20-Transaction-list)
 
 
-## KLC20 list
-List all klc20 tokens order by transfer transactions count.
+## KRC20 list
+List all krc20 tokens order by transfer transactions count.
 
 **Request URL**
 ```
-GET /klc20
+GET /krc20
 ```
 
 **Request Parameter**
@@ -35,7 +35,7 @@ GET /klc20
 
 **Request**
 ```
-GET /klc20?limit=10&offset=0
+GET /krc20?limit=10&offset=0
 ```
 
 **Response**
@@ -158,11 +158,11 @@ GET /klc20?limit=10&offset=0
 ```
 
 
-## KLC20 Transaction list
+## KRC20 Transaction list
 
 **Request URL**
 ```
-GET /klc20/:token/txs
+GET /krc20/:token/txs
 ```
 
 **Request Parameter**
@@ -203,7 +203,7 @@ GET /klc20/:token/txs
 
 **Request**
 ```
-GET /klc20/f2033ede578e17fa6231047265010445bca8cf1c/txs?limit=5&offset=0
+GET /krc20/f2033ede578e17fa6231047265010445bca8cf1c/txs?limit=5&offset=0
 ```
 
 **Response**

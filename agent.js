@@ -33,7 +33,7 @@ module.exports = function(agent) {
   function updateStatistics() {
     if (tip && Buffer.compare(lastTipHash, tip.hash) !== 0) {
       agent.messenger.sendRandom('update-richlist')
-      agent.messenger.sendRandom('update-klc20-statistics')
+      agent.messenger.sendRandom('update-krc20-statistics')
       agent.messenger.sendRandom('update-daily-transactions')
       agent.messenger.sendRandom('update-block-interval')
       agent.messenger.sendRandom('update-address-growth')

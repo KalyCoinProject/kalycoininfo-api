@@ -26,8 +26,8 @@ GET /contract/6b8bf98ff497c064e8f0bde13e0c4f5ed5bf8ce7
   "address": "6b8bf98ff497c064e8f0bde13e0c4f5ed5bf8ce7",
   "addressHex": "6b8bf98ff497c064e8f0bde13e0c4f5ed5bf8ce7",
   "vm": "evm",
-  "type": "klc20",
-  "klc20": {
+  "type": "krc20",
+  "krc20": {
     "name": "Bodhi Token",
     "symbol": "BOT",
     "decimals": 8,
@@ -40,8 +40,8 @@ GET /contract/6b8bf98ff497c064e8f0bde13e0c4f5ed5bf8ce7
   "totalReceived": "1086500002",
   "totalSent": "1086500002",
   "unconfirmed": "0",
-  "klc20Balances": [],
-  "klc721Balances": [],
+  "krc20Balances": [],
+  "krc721Balances": [],
   "transactionCount": 20572
 }
 ```

@@ -11,29 +11,29 @@ class ContractController extends Controller {
       addressHex: summary.addressHex.toString('hex'),
       vm: summary.vm,
       type: summary.type,
-      ...summary.type === 'klc20' ? {
-        klc20: {
-          name: summary.klc20.name,
-          symbol: summary.klc20.symbol,
-          decimals: summary.klc20.decimals,
-          totalSupply: summary.klc20.totalSupply.toString(),
-          version: summary.klc20.version,
-          holders: summary.klc20.holders,
-          transactions: summary.klc20.transactions
+      ...summary.type === 'krc20' ? {
+        krc20: {
+          name: summary.krc20.name,
+          symbol: summary.krc20.symbol,
+          decimals: summary.krc20.decimals,
+          totalSupply: summary.krc20.totalSupply.toString(),
+          version: summary.krc20.version,
+          holders: summary.krc20.holders,
+          transactions: summary.krc20.transactions
         }
       } : {},
-      ...summary.type === 'klc721' ? {
-        klc721: {
-          name: summary.klc721.name,
-          symbol: summary.klc721.symbol,
-          totalSupply: summary.klc721.totalSupply.toString()
+      ...summary.type === 'krc721' ? {
+        krc721: {
+          name: summary.krc721.name,
+          symbol: summary.krc721.symbol,
+          totalSupply: summary.krc721.totalSupply.toString()
         }
       } : {},
       balance: summary.balance.toString(),
       totalReceived: summary.totalReceived.toString(),
       totalSent: summary.totalSent.toString(),
       unconfirmed: summary.unconfirmed.toString(),
-      klc20Balances: summary.klc20Balances.map(item => ({
+      krc20Balances: summary.krc20Balances.map(item => ({
         address: item.addressHex.toString('hex'),
         addressHex: item.addressHex.toString('hex'),
         name: item.name,
@@ -41,7 +41,7 @@ class ContractController extends Controller {
         decimals: item.decimals,
         balance: item.balance.toString()
       })),
-      klc721Balances: summary.klc721Balances.map(item => ({
+      krc721Balances: summary.krc721Balances.map(item => ({
         address: item.addressHex.toString('hex'),
         addressHex: item.addressHex.toString('hex'),
         name: item.name,
@@ -114,11 +114,11 @@ class ContractController extends Controller {
     }
   }
 
-  async klc20BalanceHistory() {
+  async krc20BalanceHistory() {
     let {ctx} = this
     let tokenAddress = null
     if (ctx.state.token) {
-      if (ctx.state.token.type === 'klc20') {
+      if (ctx.state.token.type === 'krc20') {
         tokenAddress = ctx.state.token.contractAddress
       } else {
         ctx.body = {
@@ -128,7 +128,7 @@ class ContractController extends Controller {
         return
       }
     }
-    let {totalCount, transactions} = await ctx.service.klc20.getKLC20BalanceHistory([ctx.state.contract.contractAddress], tokenAddress)
+    let {totalCount, transactions} = await ctx.service.krc20.getKRC20BalanceHistory([ctx.state.contract.contractAddress], tokenAddress)
     ctx.body = {
       totalCount,
       transactions: transactions.map(tx => ({

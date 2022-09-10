@@ -13,7 +13,7 @@ module.exports = app => {
     },
     type: {
       type: ENUM,
-      values: ['dgp', 'klc20', 'klc721'],
+      values: ['dgp', 'krc20', 'krc721'],
       allowNull: true
     },
     description: {
